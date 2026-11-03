@@ -1,0 +1,49 @@
+CREATE TABLE `discord_settings` (
+	`id` int NOT NULL,
+	`channelId` varchar(24) NOT NULL,
+	`encryptedToken` text NOT NULL,
+	`connected` boolean NOT NULL DEFAULT false,
+	`lastError` text,
+	`checkedAt` timestamp,
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `discord_settings_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `ranks` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`name` varchar(80) NOT NULL,
+	`description` text,
+	`color` varchar(32) NOT NULL DEFAULT '#A9F4FF',
+	`permissions` text NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `ranks_id` PRIMARY KEY(`id`),
+	CONSTRAINT `ranks_name_unique` UNIQUE(`name`)
+);
+--> statement-breakpoint
+CREATE TABLE `stream_state` (
+	`id` int NOT NULL,
+	`isLive` boolean NOT NULL DEFAULT false,
+	`badge` varchar(40) NOT NULL DEFAULT 'OFFLINE',
+	`viewerCount` int NOT NULL DEFAULT 0,
+	`sessionEpoch` int NOT NULL DEFAULT 0,
+	`updatedAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `stream_state_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `user_ranks` (
+	`userId` int NOT NULL,
+	`rankId` int NOT NULL,
+	`assignedAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `user_ranks_userId_rankId_pk` PRIMARY KEY(`userId`,`rankId`)
+);
+--> statement-breakpoint
+ALTER TABLE `users` ADD `status` enum('pending','approved','banned') DEFAULT 'pending' NOT NULL;--> statement-breakpoint
+ALTER TABLE `users` ADD `passwordHash` varchar(255);--> statement-breakpoint
+ALTER TABLE `users` ADD `emailVerified` boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE `users` ADD `sessionVersion` int DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `users` ADD `banReason` text;--> statement-breakpoint
+ALTER TABLE `users` ADD `bannedAt` timestamp;--> statement-breakpoint
+ALTER TABLE `users` ADD CONSTRAINT `users_email_unique` UNIQUE(`email`);--> statement-breakpoint
+ALTER TABLE `user_ranks` ADD CONSTRAINT `user_ranks_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `user_ranks` ADD CONSTRAINT `user_ranks_rankId_ranks_id_fk` FOREIGN KEY (`rankId`) REFERENCES `ranks`(`id`) ON DELETE cascade ON UPDATE no action;
